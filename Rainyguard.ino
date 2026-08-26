@@ -82,7 +82,7 @@ void loop() {
     Serial.printf("[Sensoren] Temp: %.1f °C | Feuchte: %.1f %% | Regen (Raw ADC): %d\n", 
                   temperature, humidity, rainValue);
 
-    // Live-Werte auf LCD schreiben 
+    // Live-Werte auf LCD schreiben  
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.printf("T:%.1fC H:%.1f%%", temperature, humidity);
