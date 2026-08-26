@@ -45,7 +45,7 @@ void setup() {
   pinMode(PIN_BUZZER, OUTPUT);
 
   dht.begin();
-  Wire.begin(21, 22);
+  Wire.begin(4, 5);
   lcd.init();
   lcd.backlight();
 }
