@@ -4,38 +4,39 @@
 #include <LiquidCrystal_I2C.h>
 
 // --- Pin-Definitionen ---
-#define PIN_RAIN_SENSOR   34  // Analog/Digital Input Regensensor
-#define PIN_DHT           17  // DHT Data Pin
-#define PIN_DHT_TYPE      DHT11 // Bei Bedarf auf DHT22 anpassen
+#define PIN_RAIN_SENSOR   34  // Regensensor Dach (Analog)
+#define PIN_DHT           17  // DHT11/22 Data
+#define PIN_DHT_TYPE      DHT11
 
-#define PIN_GAS_MQ        23  // MQ Gassensor
-#define PIN_PIR           14  // PIR Bewegungsmelder
-#define PIN_BTN_RESET     16  // Manueller Taster / Quittierung
-
-#define PIN_FAN_PWM       18  // Luefter Motor
-#define PIN_FAN_DIR       19  // Luefter Enable/Richtung
+#define PIN_FAN_PWM       18  // Luefter Speed
+#define PIN_FAN_DIR       19  // Luefter Direction/Enable
 #define PIN_LED_STATUS    12  // Status LED
 #define PIN_BUZZER        25  // Buzzer
+#define PIN_BTN_RESET     16  // Reset Taster
 
 // --- Hardware-Objekte ---
 DHT dht(PIN_DHT, PIN_DHT_TYPE);
-LiquidCrystal_I2C lcd(0x27, 16, 2); // I2C-Adresse 0x27 oder 0x3F
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Bei Bedarf auf 0x3F aendern
 
-// --- Messwerte & Timing ---
+// --- FSM Phasen ---
+enum SystemPhase {
+  PHASE_0_NORMAL,
+  PHASE_1_VENTILATION,
+  PHASE_2_CRITICAL,
+  PHASE_3_EMERGENCY_RAIN
+};
+
+SystemPhase currentPhase = PHASE_0_NORMAL;
+
 float temperature = 0.0;
 float humidity = 0.0;
-int rainValue = 0;
-unsigned long lastSensorRead = 0;
-const unsigned long SENSOR_INTERVAL = 2000; // Alle 2 Sek. abfragen
+int rainRaw = 4095;
+unsigned long lastUpdate = 0;
 
 void setup() {
   Serial.begin(115200);
-  delay(500);
 
-  // Pin-Modi konfigurieren
   pinMode(PIN_RAIN_SENSOR, INPUT);
-  pinMode(PIN_GAS_MQ, INPUT);
-  pinMode(PIN_PIR, INPUT);
   pinMode(PIN_BTN_RESET, INPUT_PULLUP);
 
   pinMode(PIN_FAN_PWM, OUTPUT);
@@ -43,50 +44,85 @@ void setup() {
   pinMode(PIN_LED_STATUS, OUTPUT);
   pinMode(PIN_BUZZER, OUTPUT);
 
-  // Aktoren initial aus
-  digitalWrite(PIN_FAN_PWM, LOW);
-  digitalWrite(PIN_FAN_DIR, LOW);
-  digitalWrite(PIN_LED_STATUS, LOW);
-  digitalWrite(PIN_BUZZER, LOW);
-
-  // Sensoren & Display starten
   dht.begin();
-  Wire.begin(21, 22); // Standard SDA=21, SCL=22 beim ESP32
+  Wire.begin(21, 22);
   lcd.init();
   lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("RainyGuard ESP32");
-  lcd.setCursor(0, 1);
-  lcd.print("Init Sensors...");
+}
 
-  Serial.println("[RainyGuard] Sensor-Treiber initialisiert.");
+void setFan(int speed) {
+  // speed: 0 (Aus) bis 255 (Vollgas)
+  digitalWrite(PIN_FAN_DIR, speed > 0 ? HIGH : LOW);
+  analogWrite(PIN_FAN_PWM, speed);
 }
 
 void loop() {
-  unsigned long currentMillis = millis();
+  unsigned long now = millis();
 
-  // Non-blocking Sensor-Abfrage
-  if (currentMillis - lastSensorRead >= SENSOR_INTERVAL) {
-    lastSensorRead = currentMillis;
+  if (now - lastUpdate >= 1000) {
+    lastUpdate = now;
 
     humidity = dht.readHumidity();
     temperature = dht.readTemperature();
-    rainValue = analogRead(PIN_RAIN_SENSOR);
+    rainRaw = analogRead(PIN_RAIN_SENSOR);
 
-    if (isnan(humidity) || isnan(temperature)) {
-      Serial.println("[WARN] Fehler beim Lesen des DHT-Sensors!");
-      return;
+    if (isnan(humidity) || isnan(temperature)) return;
+
+    // --- Phasen-Eskalation ---
+    // Regensensor liefert bei Nässe typischerweise niedrige ADC-Werte (< 2500)
+    if (rainRaw < 2500 || humidity > 85.0) {
+      currentPhase = PHASE_3_EMERGENCY_RAIN;
+    } else if (humidity >= 75.0) {
+      currentPhase = PHASE_2_CRITICAL;
+    } else if (humidity >= 60.0) {
+      currentPhase = PHASE_1_VENTILATION;
+    } else {
+      currentPhase = PHASE_0_NORMAL;
     }
 
-    // Debug-Ausgabe auf der seriellen Konsole
-    Serial.printf("[Sensoren] Temp: %.1f °C | Feuchte: %.1f %% | Regen (Raw ADC): %d\n", 
-                  temperature, humidity, rainValue);
-
-    // Live-Werte auf LCD schreiben  
+    // --- Aktor- & Display-Steuerung nach Phase ---
     lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.printf("T:%.1fC H:%.1f%%", temperature, humidity);
-    lcd.setCursor(0, 1);
-    lcd.printf("Rain ADC: %d", rainValue);
+    switch (currentPhase) {
+      case PHASE_0_NORMAL:
+        setFan(0);
+        digitalWrite(PIN_LED_STATUS, LOW);
+        digitalWrite(PIN_BUZZER, LOW);
+        lcd.setCursor(0, 0);
+        lcd.printf("T:%.1fC H:%.0f%%", temperature, humidity);
+        lcd.setCursor(0, 1);
+        lcd.print("Status: Normal");
+        break;
+
+      case PHASE_1_VENTILATION:
+        setFan(130); // ~50% PWM
+        digitalWrite(PIN_LED_STATUS, (now / 500) % 2); // Langsames Blinken
+        digitalWrite(PIN_BUZZER, LOW);
+        lcd.setCursor(0, 0);
+        lcd.printf("T:%.1fC H:%.0f%%", temperature, humidity);
+        lcd.setCursor(0, 1);
+        lcd.print("P1: Lueftung 50%");
+        break;
+
+      case PHASE_2_CRITICAL:
+        setFan(255); // 100% PWM
+        digitalWrite(PIN_LED_STATUS, (now / 200) % 2); // Schnelles Blinken
+        // Kurzer Beep jede Sekunde
+        digitalWrite(PIN_BUZZER, (now % 1000 < 100) ? HIGH : LOW);
+        lcd.setCursor(0, 0);
+        lcd.printf("WARN H:%.0f%% !", humidity);
+        lcd.setCursor(0, 1);
+        lcd.print("P2: Max Lueftung");
+        break;
+
+      case PHASE_3_EMERGENCY_RAIN:
+        setFan(0); // SOFORT STOPPEN
+        digitalWrite(PIN_LED_STATUS, HIGH);
+        digitalWrite(PIN_BUZZER, (now / 150) % 2); // Schneller Alarmton
+        lcd.setCursor(0, 0);
+        lcd.print("!! ALARM: REGEN !!");
+        lcd.setCursor(0, 1);
+        lcd.print("FENSTER ZU / NOT");
+        break;
+    }
   }
 }
