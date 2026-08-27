@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="100%" height="100%">
+  <defs>
+    <!-- Soft Gradients -->
+    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#DCE9F5"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4A90E2"/>
+      <stop offset="100%" stop-color="#1B4F72"/>
+    </linearGradient>
+    <linearGradient id="woodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A0522D"/>
+      <stop offset="100%" stop-color="#6E2C00"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#2C3E50" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Background Accent Pill -->
+  <rect x="10" y="10" width="780" height="220" rx="32" fill="#F4F9F9" stroke="#E1EFEF" stroke-width="2"/>
+
+  <!-- ICON GROUP -->
+  <g transform="translate(40, 20)">
+    <!-- Raindrops -->
+    <path d="M 65 175 C 65 170 70 155 70 155 C 70 155 75 170 75 175 C 75 178 72 181 70 181 C 67 181 65 178 65 175 Z" fill="#7FB3D5" opacity="0.7"/>
+    <path d="M 145 170 C 145 165 150 150 150 150 C 150 150 155 165 155 170 C 155 173 152 176 150 176 C 147 176 145 173 145 170 Z" fill="#7FB3D5" opacity="0.7"/>
+
+    <!-- Ghibli Style Cloud Body -->
+    <g filter="url(#softShadow)">
+      <path d="M 50 130 
+               A 35 35 0 0 1 70 65 
+               A 45 45 0 0 1 140 50 
+               A 40 40 0 0 1 190 90 
+               A 35 35 0 0 1 175 140 
+               L 50 140 Z" 
+            fill="url(#cloudGrad)" stroke="#5D6D7E" stroke-width="3" stroke-linejoin="round"/>
+      
+      <!-- Tech Circuit Trace on Cloud (Subtle) -->
+      <path d="M 85 85 L 105 85 L 115 70 M 105 85 L 115 100" fill="none" stroke="#7FB3D5" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="115" cy="70" r="3.5" fill="#3498DB"/>
+      <circle cx="115" cy="100" r="3.5" fill="#3498DB"/>
+      <circle cx="85" cy="85" r="3.5" fill="#3498DB"/>
+
+      <!-- Friendly Eyes (Ghibli Touch) -->
+      <ellipse cx="85" cy="112" rx="3.5" ry="5" fill="#2C3E50"/>
+      <ellipse cx="135" cy="112" rx="3.5" ry="5" fill="#2C3E50"/>
+      <circle cx="86" cy="110" r="1.5" fill="#FFFFFF"/>
+      <circle cx="136" cy="110" r="1.5" fill="#FFFFFF"/>
+      <!-- Rosy Cheeks -->
+      <ellipse cx="76" cy="120" rx="6" ry="3.5" fill="#FADBD8"/>
+      <ellipse cx="144" cy="120" rx="6" ry="3.5" fill="#FADBD8"/>
+      <!-- Soft Smile -->
+      <path d="M 105 118 Q 110 124 115 118" fill="none" stroke="#2C3E50" stroke-width="2" stroke-linecap="round"/>
+    </g>
+
+    <!-- Mini House (Bottom Right of Icon) -->
+    <g transform="translate(110, 115)" filter="url(#softShadow)">
+      <!-- House Base -->
+      <rect x="10" y="30" width="55" height="45" rx="3" fill="#F5EEF8" stroke="#5D6D7E" stroke-width="2.5"/>
+      <!-- Wooden Roof -->
+      <path d="M 5 32 L 37.5 5 L 70 32 Z" fill="url(#woodGrad)" stroke="#4A235A" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- Door -->
+      <rect x="28" y="50" width="18" height="25" rx="2" fill="#BA4A00" stroke="#5D6D7E" stroke-width="2"/>
+      <circle cx="41" cy="63" r="1.5" fill="#F4D03F"/>
+      <!-- Cozy Window -->
+      <rect x="16" y="42" width="12" height="12" rx="2" fill="#F9E79F" stroke="#5D6D7E" stroke-width="1.5"/>
+    </g>
+
+    <!-- Defense Shield -->
+    <g transform="translate(25, 95)" filter="url(#softShadow)">
+      <path d="M 15 10 
+               Q 40 5 65 10 
+               Q 65 45 40 75 
+               Q 15 45 15 10 Z" 
+            fill="url(#shieldGrad)" stroke="#1A5276" stroke-width="3"/>
+      <path d="M 23 16 
+               Q 40 12 57 16 
+               Q 57 42 40 65 
+               Q 23 42 23 16 Z" 
+            fill="none" stroke="#AED6F1" stroke-width="1.5" opacity="0.6"/>
+      <!-- Glowing Water Drop inside Shield -->
+      <path d="M 40 28 C 40 28 49 42 49 49 C 49 54 45 58 40 58 C 35 58 31 54 31 49 C 31 42 40 28 40 28 Z" 
+            fill="#EBF5FB" stroke="#AED6F1" stroke-width="1.5"/>
+    </g>
+  </g>
+
+  <!-- TYPOGRAPHY / LOGO TEXT -->
+  <g transform="translate(280, 70)">
+    <!-- Title -->
+    <text x="0" y="55" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="54" font-weight="900" fill="#2C3E50" letter-spacing="-1">
+      Rainy<tspan fill="#3498DB">Guard</tspan>
+    </text>
+    
+    <!-- Subtitle / Tagline -->
+    <text x="5" y="90" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#7F8C8D" letter-spacing="2.5">
+      AUTONOMOUS WEATHER DEFENSE · ESP32
+    </text>
+
+    <!-- Minimal Badges Row inside SVG -->
+    <g transform="translate(5, 108)">
+      <rect x="0" y="0" width="75" height="20" rx="5" fill="#E8F8F5"/>
+      <text x="37.5" y="14" font-family="monospace" font-size="11" font-weight="700" fill="#117864" text-anchor="middle">FSM-CORE</text>
+
+      <rect x="85" y="0" width="85" height="20" rx="5" fill="#EBF5FB"/>
+      <text x="127.5" y="14" font-family="monospace" font-size="11" font-weight="700" fill="#2471A3" text-anchor="middle">ZERO-CLOUD</text>
+
+      <rect x="180" y="0" width="60" height="20" rx="5" fill="#FEF9E7"/>
+      <text x="210" y="14" font-family="monospace" font-size="11" font-weight="700" fill="#B7950B" text-anchor="middle">v0.1.0</text>
+    </g>
+  </g>
+</svg>
