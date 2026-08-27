@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/setup.png" width="450" alt="RainyGuard — Smart Home Defense">
+  <img src="RainyGuard_Logo.svg" width="450" alt="RainyGuard — Smart Home Defense">
 </p>
 
 <p align="center">
@@ -20,13 +20,15 @@
 
 RainyGuard deliberately avoids complex networking overhead. There is **no SLA on API responses, and a hard guarantee on local execution**: the moment the roof-mounted analog rain sensor detects a drop[cite: 1], or the DHT11 crosses a humidity threshold[cite: 1], the system instantly transitions, adjusting DC fans[cite: 1], servo-driven windows[cite: 1], and alarms in milliseconds.
 
-$ Serial Monitor (115200 baud)
+```C++ Serial Monitor (115200 baud)
 [RainyGuard] Booting ESP32 Node...
 ✓ I2C Bus active @ 50kHz
 ✓ Sensors initialized
 [FSM] Phase: 0 | Temp: 22.4 C | Humidity: 45.0 % | Rain ADC: 4095
 [FSM] Phase: 3 | Temp: 22.4 C | Humidity: 45.0 % | Rain ADC: 1200
 !! ALARM TRIGGERED: EMERGENCY RAIN LOCKDOWN !!
+```
+
 ## See it running
 
 <p align="center">
@@ -35,7 +37,7 @@ $ Serial Monitor (115200 baud)
 <p align="center"><em>The physical deployment: An ESP32 routing logic to a 16x2 I2C LCD, DHT11/22, and the roof-mounted analog rain sensor[cite: 1]. The UI provides instant <strong>Phase Status</strong> and environmental metrics[cite: 1].</em></p>
 
 <p align="center">
-  <img src="assets/actuators.png" width="800" alt="RainyGuard actuators in action">
+  <img src="RainyGuard_Home.jpeg" width="800" alt="RainyGuard actuators in action">
 </p>
 <p align="center"><em>The <strong>Actuator Array</strong>: PWM-controlled DC fan for room ventilation[cite: 1] scaling with humidity, automated servo motor window control[cite: 1], and strict acoustic/visual alerts (LED & Buzzer)[cite: 1] tied to Phase 2 (Critical) and Phase 3 (Emergency).</em></p>
 
