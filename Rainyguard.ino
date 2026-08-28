@@ -5,22 +5,22 @@
 
 // --- Pin-Definitionen ---
 #define PIN_RAIN_SENSOR   34  // Regensensor Dach (Analog)
-#define PIN_DHT           17  // DHT11/22 Data Pin
+#define PIN_DHT           17  // DHT11 Data Pin
 #define PIN_DHT_TYPE      DHT11
 
 #define PIN_FAN_PWM       18  // Luefter Speed (PWM)
 #define PIN_FAN_DIR       19  // Luefter Direction/Enable
 #define PIN_LED_STATUS    12  // Status LED
-#define PIN_BUZZER        25  // Buzzer
+#define PIN_BUZZER        25  // Passiver Piezo Buzzer
 #define PIN_BTN_RESET     16  // Reset Taster
 
-// I2C Pins
-#define I2C_SDA           4
-#define I2C_SCL           5
+// Dedizierte I2C-Pins des ESP32 Boards
+#define I2C_SDA           21
+#define I2C_SCL           22
 
 // --- Hardware-Objekte ---
 DHT dht(PIN_DHT, PIN_DHT_TYPE);
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Falls Display dunkel bleibt: 0x3F probieren
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // --- FSM Phasen ---
 enum SystemPhase {
@@ -36,51 +36,44 @@ float temperature = 0.0;
 float humidity = 0.0;
 int rainRaw = 4095;
 unsigned long lastUpdate = 0;
+char lineBuffer[17];
 
 void setFan(int speed) {
-  // speed: 0 (Aus) bis 255 (Vollgas)
   digitalWrite(PIN_FAN_DIR, speed > 0 ? HIGH : LOW);
   analogWrite(PIN_FAN_PWM, speed);
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(1000); // Dem ESP32 & USB-UART Zeit zum Sync geben
+  delay(500);
 
-  Serial.println("\n=================================");
-  Serial.println("[RainyGuard] Booting ESP32 Node...");
-  Serial.println("=================================");
+  Serial.println("\n[RainyGuard] Booting ESP32 Node...");
 
   pinMode(PIN_RAIN_SENSOR, INPUT);
   pinMode(PIN_BTN_RESET, INPUT_PULLUP);
-
   pinMode(PIN_FAN_PWM, OUTPUT);
   pinMode(PIN_FAN_DIR, OUTPUT);
   pinMode(PIN_LED_STATUS, OUTPUT);
   pinMode(PIN_BUZZER, OUTPUT);
 
-  // Aktoren initial zuruecksetzen
   setFan(0);
   digitalWrite(PIN_LED_STATUS, LOW);
-  digitalWrite(PIN_BUZZER, LOW);
+  noTone(PIN_BUZZER);
 
-  // Sensoren & I2C Bus initialisieren
   dht.begin();
   
-  pinMode(I2C_SDA, INPUT_PULLUP);
-  pinMode(I2C_SCL, INPUT_PULLUP);
   Wire.begin(I2C_SDA, I2C_SCL);
-  Wire.setClock(50000); // 50kHz fuer hohe Signalstabilitaet
+  Wire.setClock(50000);
+  Wire.setTimeOut(50);
 
   lcd.init();
   lcd.backlight();
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("RainyGuard ESP32");
+  lcd.print("RainyGuard Node ");
   lcd.setCursor(0, 1);
-  lcd.print("System Ready...");
-
-  Serial.println("[RainyGuard] Initialisierung abgeschlossen. Starte FSM Loop.\n");
+  lcd.print("System Ready... ");
+  delay(1200);
 }
 
 void loop() {
@@ -94,12 +87,11 @@ void loop() {
     rainRaw = analogRead(PIN_RAIN_SENSOR);
 
     if (isnan(humidity) || isnan(temperature)) {
-      Serial.println("[WARN] DHT-Sensor liefert fehlerhafte Werte (NaN)!");
+      Serial.println("[WARN] DHT11 nicht lesbar (Pruefe GPIO 17)");
       return;
     }
 
     // --- Phasen-Eskalation ---
-    // Regensensor liefert bei Naesse niedrige ADC-Werte (< 2500)
     if (rainRaw < 2500 || humidity > 85.0) {
       currentPhase = PHASE_3_EMERGENCY_RAIN;
     } else if (humidity >= 75.0) {
@@ -110,51 +102,68 @@ void loop() {
       currentPhase = PHASE_0_NORMAL;
     }
 
-    // --- Serial Monitor Log ---
-    Serial.printf("[FSM] Phase: %d | Temp: %.1f C | Humidity: %.1f %% | Rain ADC: %d\n", 
+    Serial.printf("[FSM] Phase: %d | Temp: %.1f C | Hum: %.1f %% | Rain ADC: %d\n", 
                   currentPhase, temperature, humidity, rainRaw);
 
     // --- Aktor- & Display-Steuerung nach Phase ---
-    lcd.clear();
     switch (currentPhase) {
       case PHASE_0_NORMAL:
         setFan(0);
         digitalWrite(PIN_LED_STATUS, LOW);
-        digitalWrite(PIN_BUZZER, LOW);
+        noTone(PIN_BUZZER);
+
+        snprintf(lineBuffer, sizeof(lineBuffer), "T:%.1fC H:%.0f%%    ", temperature, humidity);
         lcd.setCursor(0, 0);
-        lcd.printf("T:%.1fC H:%.0f%%", temperature, humidity);
+        lcd.print(lineBuffer);
         lcd.setCursor(0, 1);
-        lcd.print("Status: Normal");
+        lcd.print("Status: Normal  ");
         break;
 
       case PHASE_1_VENTILATION:
-        setFan(130); // ~50% PWM
-        digitalWrite(PIN_LED_STATUS, (now / 500) % 2); // Langsames Blinken
-        digitalWrite(PIN_BUZZER, LOW);
+        setFan(130);
+        digitalWrite(PIN_LED_STATUS, (now / 500) % 2);
+        noTone(PIN_BUZZER);
+
+        snprintf(lineBuffer, sizeof(lineBuffer), "T:%.1fC H:%.0f%%    ", temperature, humidity);
         lcd.setCursor(0, 0);
-        lcd.printf("T:%.1fC H:%.0f%%", temperature, humidity);
+        lcd.print(lineBuffer);
         lcd.setCursor(0, 1);
-        lcd.print("P1: Lueftung 50%");
+        lcd.print("P1: Fan 50%     ");
         break;
 
       case PHASE_2_CRITICAL:
-        setFan(255); // 100% PWM
-        digitalWrite(PIN_LED_STATUS, (now / 200) % 2); // Schnelles Blinken
-        digitalWrite(PIN_BUZZER, (now % 1000 < 100) ? HIGH : LOW); // Kurzer Beep
+        setFan(255);
+        digitalWrite(PIN_LED_STATUS, (now / 200) % 2);
+        
+        // Akustischer Intervall-Warnton (1500 Hz)
+        if (now % 1000 < 150) {
+          tone(PIN_BUZZER, 1500);
+        } else {
+          noTone(PIN_BUZZER);
+        }
+
+        snprintf(lineBuffer, sizeof(lineBuffer), "WARN: Hum %.0f%%!  ", humidity);
         lcd.setCursor(0, 0);
-        lcd.printf("WARN H:%.0f%% !", humidity);
+        lcd.print(lineBuffer);
         lcd.setCursor(0, 1);
-        lcd.print("P2: Max Lueftung");
+        lcd.print("P2: Max Fan 100%");
         break;
 
       case PHASE_3_EMERGENCY_RAIN:
-        setFan(0); // Sofort stoppen
+        setFan(0);
         digitalWrite(PIN_LED_STATUS, HIGH);
-        digitalWrite(PIN_BUZZER, (now / 150) % 2); // Alarmton
+        
+        // Wechselnder 2-Ton-Alarm (2200 Hz / 1600 Hz)
+        if ((now / 200) % 2) {
+          tone(PIN_BUZZER, 2200);
+        } else {
+          tone(PIN_BUZZER, 1600);
+        }
+
         lcd.setCursor(0, 0);
-        lcd.print("!! ALARM: REGEN !!");
+        lcd.print("! ALARM: REGEN !");
         lcd.setCursor(0, 1);
-        lcd.print("FENSTER ZU / NOT");
+        lcd.print("LOCKDOWN / NOT  ");
         break;
     }
   }
