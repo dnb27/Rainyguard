@@ -4,7 +4,7 @@
 #include <LiquidCrystal_I2C.h>
 
 // --- Pin-Definitionen ---
-#define PIN_RAIN_SENSOR   34  // Regensensor Dach (Analog)
+#define PIN_RAIN_SENSOR   34  // Keyestudio Steam/Drop Sensor Dach (Analog)
 #define PIN_DHT           17  // DHT11 Data Pin
 #define PIN_DHT_TYPE      DHT11
 
@@ -34,7 +34,7 @@ SystemPhase currentPhase = PHASE_0_NORMAL;
 
 float temperature = 0.0;
 float humidity = 0.0;
-int rainRaw = 4095;
+int rainRaw = 0;
 unsigned long lastUpdate = 0;
 char lineBuffer[17];
 
@@ -91,12 +91,13 @@ void loop() {
       return;
     }
 
-    // --- Phasen-Eskalation ---
-    if (rainRaw < 2500 || humidity > 85.0) {
+    // --- Phasen-Eskalation (Angepasst fuer Keyestudio Steam-Sensor & Raumluft) ---
+    // Trocken: ADC ~ 0 .. 100 | Nässe/Tropfen: ADC > 500
+    if (rainRaw > 500 || humidity > 90.0) {
       currentPhase = PHASE_3_EMERGENCY_RAIN;
-    } else if (humidity >= 75.0) {
+    } else if (humidity >= 78.0) {
       currentPhase = PHASE_2_CRITICAL;
-    } else if (humidity >= 60.0) {
+    } else if (humidity >= 65.0) {
       currentPhase = PHASE_1_VENTILATION;
     } else {
       currentPhase = PHASE_0_NORMAL;
