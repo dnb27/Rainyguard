@@ -42,7 +42,7 @@ RainyGuard deliberately avoids complex networking overhead. There is **no SLA on
 <p align="center"><em>The physical deployment: An ESP32 routing logic to a 16x2 I2C LCD, DHT11/22, and the roof-mounted analog rain sensor[cite: 1]. The UI provides instant <strong>Phase Status</strong> and environmental metrics[cite: 1].</em></p>
 
 <p align="center">
-  <img src="RainyGuard_Home.jpeg" width="800" alt="RainyGuard actuators in action">
+  <img src="assets/RainyGuard_Home.jpeg" width="800" alt="RainyGuard actuators in action">
 </p>
 <p align="center"><em>The <strong>Actuator Array</strong>: PWM-controlled DC fan for room ventilation[cite: 1] scaling with humidity, automated servo motor window control[cite: 1], and strict acoustic/visual alerts (LED & Buzzer)[cite: 1] tied to Phase 2 (Critical) and Phase 3 (Emergency).</em></p>
 
