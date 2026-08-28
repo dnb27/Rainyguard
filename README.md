@@ -3,9 +3,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Ri4ards2006/Rainyguard"><img src="https://img.shields.io/badge/Platform-ESP32-blue?style=flat-square&logo=espressif" alt="Platform"></a>
-  <a href="https://github.com/Ri4ards2006/Rainyguard"><img src="https://img.shields.io/badge/Language-C++-00599C?style=flat-square&logo=c%2B%2B" alt="Language"></a>
-  <a href="https://github.com/Ri4ards2006/Rainyguard/releases"><img src="https://img.shields.io/github/v/release/Ri4ards2006/Rainyguard?color=2ea043&style=flat-square" alt="Latest release"></a>
+  <a href="https://www.espressif.com/en/products/socs/esp32"><img src="https://img.shields.io/badge/Platform-ESP32-E7352C?style=flat-square&logo=espressif&logoColor=white" alt="Platform"></a>
+  <a href="https://en.wikipedia.org/wiki/C%2B%2B"><img src="https://img.shields.io/badge/Language-C%2B%2B17-00599C?style=flat-square&logo=c%2B%2B&logoColor=white" alt="Language"></a>
+  <a href="https://www.arduino.cc/"><img src="https://img.shields.io/badge/Framework-Arduino-00979C?style=flat-square&logo=arduino&logoColor=white" alt="Framework"></a>
+  <img src="https://img.shields.io/badge/Architecture-Deterministic_FSM-blueviolet?style=flat-square" alt="Architecture">
+  <img src="https://img.shields.io/badge/Cloud_Dependency-Zero%20(Local%20Only)-success?style=flat-square" alt="Zero Cloud">
+  <a href="https://github.com/Ri4ards2006/Rainyguard/releases"><img src="https://img.shields.io/badge/Release-v0.1.0--alpha-2ea043?style=flat-square" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License"></a>
+  <a href="https://github.com/Ri4ards2006/Rainyguard/commits/main"><img src="https://img.shields.io/github/last-commit/Ri4ards2006/Rainyguard?style=flat-square&color=blue" alt="Last Commit"></a>
 </p>
 
 <p align="center">
